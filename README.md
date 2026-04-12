@@ -1,2 +1,5 @@
 # todo-bot
-a discord todolist bot
+a simple discord todolist bot
+
+
+> **hosted with render**
