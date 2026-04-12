@@ -12,7 +12,6 @@ def home():
     return "Bot is alive and running!"
 
 def run():
-    # Render assigns a dynamic port
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
@@ -26,8 +25,6 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    database.setup_db()
-    keep_alive() 
     print(f'Logged in as {bot.user}')
 
 @bot.command()
@@ -51,8 +48,9 @@ async def done(ctx, task_id: int):
     database.remove_task(task_id)
     await ctx.send(f"🗑️ Removed task `{task_id}`")
 
-# Fetch token from Render's Environment Variables
 TOKEN = os.environ.get('DISCORD_TOKEN')
 
 if __name__ == "__main__":
+    database.setup_db()
+    keep_alive()
     bot.run(TOKEN)
