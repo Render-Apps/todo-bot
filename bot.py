@@ -29,24 +29,27 @@ async def on_ready():
 
 @bot.command()
 async def add(ctx, *, task: str):
-    database.add_task(ctx.author.id, task)
+    database.add_task(task)
     await ctx.send(f"✅ Added: {task}")
 
 @bot.command()
 async def list(ctx):
-    tasks = database.get_tasks(ctx.author.id)
+    tasks = database.get_tasks()
     if not tasks:
-        return await ctx.send("Your list is empty!")
+        return await ctx.send("The server to-do list is empty!")
     
-    response = "**Your To-Do List:**\n"
+    response = "**Server To-Do List:**\n"
     for task_id, task in tasks:
         response += f"`{task_id}`: {task}\n"
     await ctx.send(response)
 
 @bot.command()
 async def done(ctx, task_id: int):
-    database.remove_task(task_id)
-    await ctx.send(f"🗑️ Removed task `{task_id}`")
+    success = database.remove_task(task_id)
+    if success:
+        await ctx.send(f"🗑️ Removed task `{task_id}`")
+    else:
+        await ctx.send(f"⚠️ Task `{task_id}` not found.")
 
 TOKEN = os.environ.get('DISCORD_TOKEN')
 

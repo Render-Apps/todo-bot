@@ -10,9 +10,8 @@ def setup_db():
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS todos (
+        CREATE TABLE IF NOT EXISTS server_todos (
             id SERIAL PRIMARY KEY,
-            user_id BIGINT,
             task TEXT
         )
     ''')
@@ -20,18 +19,18 @@ def setup_db():
     cursor.close()
     conn.close()
 
-def add_task(user_id, task):
+def add_task(task):
     conn = get_connection()
     c = conn.cursor()
-    c.execute('INSERT INTO todos (user_id, task) VALUES (%s, %s)', (user_id, task))
+    c.execute('INSERT INTO server_todos (task) VALUES (%s)', (task,))
     conn.commit()
     c.close()
     conn.close()
 
-def get_tasks(user_id):
+def get_tasks():
     conn = get_connection()
     c = conn.cursor()
-    c.execute('SELECT id, task FROM todos WHERE user_id = %s', (user_id,))
+    c.execute('SELECT id, task FROM server_todos ORDER BY id ASC')
     rows = c.fetchall()
     c.close()
     conn.close()
@@ -40,7 +39,9 @@ def get_tasks(user_id):
 def remove_task(task_id):
     conn = get_connection()
     c = conn.cursor()
-    c.execute('DELETE FROM todos WHERE id = %s', (task_id,))
+    c.execute('DELETE FROM server_todos WHERE id = %s', (task_id,))
+    rows_deleted = c.rowcount
     conn.commit()
     c.close()
     conn.close()
+    return rows_deleted > 0
