@@ -25,27 +25,39 @@ commands = [
             {
                 "name": "task",
                 "description": "The task to add",
-                "type": 3, # Type 3 is a String
+                "type": 3, 
+                "required": True
+            }
+        ]
+    },
+    {
+        "name": "multi_add",
+        "description": "Add multiple tasks separated by commas",
+        "type": 1,
+        "options": [
+            {
+                "name": "tasks",
+                "description": "e.g. Clean the kitchen, Buy groceries, Walk the dog",
+                "type": 3, 
                 "required": True
             }
         ]
     },
     {
         "name": "done",
-        "description": "Remove a task by its ID",
+        "description": "Mark a task as done by its ID",
         "type": 1,
         "options": [
             {
                 "name": "task_id",
                 "description": "The ID of the task",
-                "type": 4, # Type 4 is an Integer
+                "type": 4, 
                 "required": True
             }
         ]
     }
 ]
 
-# Send the commands to Discord
 response = requests.put(url, headers=headers, json=commands)
 
 if response.status_code == 200:
