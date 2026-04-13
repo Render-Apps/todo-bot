@@ -6,30 +6,38 @@ import database
 
 app = Flask(__name__)
 
-# This is found in the Discord Developer Portal -> General Information
-PUBLIC_KEY = os.environ.get('DISCORD_PUBLIC_KEY')
+# Use .strip() to ensure no hidden spaces or newlines break the hex conversion
+PUBLIC_KEY = os.environ.get('DISCORD_PUBLIC_KEY', '').strip()
 
 @app.route('/api/interactions', methods=['POST'])
 def interactions():
-    # 1. Verify the Request comes from Discord
-    verify_key = VerifyKey(bytes.fromhex(PUBLIC_KEY))
+    # 1. Capture Raw Data for Verification
     signature = request.headers.get('X-Signature-Ed25519')
     timestamp = request.headers.get('X-Signature-Timestamp')
-    body = request.get_data().decode('utf-8')
+    
+    # CRITICAL: We use get_data() as raw bytes, NO .decode() here
+    raw_body = request.get_data()
 
+    if not signature or not timestamp or not PUBLIC_KEY:
+        return 'Missing required headers or configuration', 400
+
+    # 2. Cryptographic Verification (Raw Bytes Method)
     try:
-        verify_key.verify(f'{timestamp}{body}'.encode(), bytes.fromhex(signature))
-    except BadSignatureError:
+        verify_key = VerifyKey(bytes.fromhex(PUBLIC_KEY))
+        # Concatenate timestamp bytes and body bytes directly
+        verify_key.verify(
+            timestamp.encode() + raw_body, 
+            bytes.fromhex(signature)
+        )
+    except (BadSignatureError, ValueError):
         return 'Invalid request signature', 401
 
-    # 2. Parse the Command
+    # 3. Parse JSON for Logic (Only AFTER verification)
     data = request.json
 
-    # Discord's initial ping to verify your endpoint is alive
     if data['type'] == 1:
         return jsonify({"type": 1})
 
-    # Slash Command Execution
     if data['type'] == 2:
         command_name = data['data']['name']
 
@@ -44,13 +52,11 @@ def interactions():
             return jsonify({"type": 4, "data": {"content": response_text}})
 
         elif command_name == 'add':
-            # Extract the user's string input from the JSON payload
             task_content = data['data']['options'][0]['value']
             database.add_task(task_content)
             return jsonify({"type": 4, "data": {"content": f"✅ Added: {task_content}"}})
 
         elif command_name == 'done':
-            # Extract the integer input from the JSON payload
             task_id = data['data']['options'][0]['value']
             success = database.remove_task(task_id)
             if success:
