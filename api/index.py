@@ -65,7 +65,7 @@ def interactions():
                 embeds.append({
                     "title": "✅ Completed Tasks",
                     "description": done_text,
-                    "color": 5763719 # Green
+                    "color": 5763719
                 })
                 
             return jsonify({"type": 4, "data": {"embeds": embeds}})

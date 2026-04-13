@@ -10,7 +10,6 @@ headers = {
     "Content-Type": "application/json"
 }
 
-# Define the JSON structure for your commands
 commands = [
     {
         "name": "list",
@@ -31,7 +30,7 @@ commands = [
         ]
     },
     {
-        "name": "multi",
+        "name": "multi_add",
         "description": "Add multiple tasks separated by commas",
         "type": 1,
         "options": [
