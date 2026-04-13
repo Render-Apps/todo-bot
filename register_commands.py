@@ -31,7 +31,7 @@ commands = [
         ]
     },
     {
-        "name": "multi_add",
+        "name": "multi",
         "description": "Add multiple tasks separated by commas",
         "type": 1,
         "options": [
