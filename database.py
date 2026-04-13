@@ -12,7 +12,8 @@ def setup_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS server_todos (
             id SERIAL PRIMARY KEY,
-            task TEXT
+            task TEXT,
+            is_done BOOLEAN DEFAULT FALSE
         )
     ''')
     conn.commit()
@@ -27,21 +28,31 @@ def add_task(task):
     c.close()
     conn.close()
 
+def add_multiple_tasks(task_list):
+    conn = get_connection()
+    c = conn.cursor()
+    # Prepare list of tuples for executemany
+    args = [(t,) for t in task_list]
+    c.executemany('INSERT INTO server_todos (task) VALUES (%s)', args)
+    conn.commit()
+    c.close()
+    conn.close()
+
 def get_tasks():
     conn = get_connection()
     c = conn.cursor()
-    c.execute('SELECT id, task FROM server_todos ORDER BY id ASC')
+    c.execute('SELECT id, task, is_done FROM server_todos ORDER BY id ASC')
     rows = c.fetchall()
     c.close()
     conn.close()
     return rows
 
-def remove_task(task_id):
+def mark_task_done(task_id):
     conn = get_connection()
     c = conn.cursor()
-    c.execute('DELETE FROM server_todos WHERE id = %s', (task_id,))
-    rows_deleted = c.rowcount
+    c.execute('UPDATE server_todos SET is_done = TRUE WHERE id = %s', (task_id,))
+    rows_updated = c.rowcount
     conn.commit()
     c.close()
     conn.close()
-    return rows_deleted > 0
+    return rows_updated > 0
