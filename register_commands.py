@@ -22,7 +22,7 @@ commands = [
         "options": [
             {
                 "name": "show_done",
-                "description": "(0) to display only ongoing / (1) to display only done / (2) to display both",
+                "description": "(0) ongoing only / (1) done only / (2) both",
                 "type": 3,
                 "required": False
             }

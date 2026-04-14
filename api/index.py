@@ -53,9 +53,9 @@ def interactions():
             done = [t for t in tasks if t[2]] # done
 
             if not list_type:
-                list_type = 0
+                list_type = '0'
 
-            if list_type == 0 or list_type == 2:
+            if list_type == '0' or list_type == '2':
                 pending_text = ""
                 for i, (task_id, task, _) in enumerate(pending, 1):
                     pending_text += f"**{i}.** (id: `{task_id}`) {task}\n"
@@ -69,7 +69,7 @@ def interactions():
                     "color": THEME_COLOR
                 }]
 
-            if done and (list_type == 0 or list_type == 2):
+            if done and (list_type == '0' or list_type == '2'):
                 done_text = ""
                 for i, (task_id, task, _) in enumerate(done, 1):
                     done_text += f"~~**{i}.** (id: `{task_id}`) {task}~~\n"
