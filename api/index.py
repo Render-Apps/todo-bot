@@ -52,6 +52,9 @@ def interactions():
             pending = [t for t in tasks if not t[2]] # not done
             done = [t for t in tasks if t[2]] # done
 
+            if not list_type:
+                list_type = 0
+
             if list_type == 0 or list_type == 2:
                 pending_text = ""
                 for i, (task_id, task, _) in enumerate(pending, 1):
