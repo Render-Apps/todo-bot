@@ -15,6 +15,7 @@ def interactions():
     
     raw_body = request.get_data()
 
+    # API verification
     if not signature or not timestamp or not PUBLIC_KEY:
         return 'Missing required headers or configuration', 400
 
@@ -36,28 +37,36 @@ def interactions():
         command_name = data['data']['name']
         THEME_COLOR = 16678937 
 
+        # Commands
         if command_name == 'list':
             tasks = database.get_tasks()
+            
+            # Empty Return
             if not tasks:
                 return jsonify({"type": 4, "data": {"embeds": [{"title": "📋 Server To-Do List", "description": "*The list is empty! Use `/add` or `/multi_add`.*", "color": THEME_COLOR}]}})
             
-            pending = [t for t in tasks if not t[2]]
-            done = [t for t in tasks if t[2]]
+            # "Type" Checking
+            list_type = data['data']['options'][0]['value']
 
-            pending_text = ""
-            for i, (task_id, task, _) in enumerate(pending, 1):
-                pending_text += f"**{i}.** (id: `{task_id}`) {task}\n"
-            
-            if not pending_text:
-                pending_text = "*All caught up!*"
+            # Get pending and done tasks
+            pending = [t for t in tasks if not t[2]] # not done
+            done = [t for t in tasks if t[2]] # done
 
-            embeds = [{
-                "title": "📋 Server To-Do List",
-                "description": "**📝 Pending Tasks**\n" + pending_text,
-                "color": THEME_COLOR
-            }]
+            if list_type == 0 or list_type == 2:
+                pending_text = ""
+                for i, (task_id, task, _) in enumerate(pending, 1):
+                    pending_text += f"**{i}.** (id: `{task_id}`) {task}\n"
+                
+                if not pending_text:
+                    pending_text = "*All caught up!*"
 
-            if done:
+                embeds = [{
+                    "title": "📋 Server To-Do List",
+                    "description": "**📝 Pending Tasks**\n" + pending_text,
+                    "color": THEME_COLOR
+                }]
+
+            if done and (list_type == 0 or list_type == 2):
                 done_text = ""
                 for i, (task_id, task, _) in enumerate(done, 1):
                     done_text += f"~~**{i}.** (id: `{task_id}`) {task}~~\n"

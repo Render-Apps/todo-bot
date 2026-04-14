@@ -1,8 +1,12 @@
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Find these in the Discord Developer Portal
-APP_ID = "YOUR_APPLICATION_ID"
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+APP_ID = os.environ.get("APP_ID")
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 url = f"https://discord.com/api/v10/applications/{APP_ID}/commands"
 headers = {
@@ -14,7 +18,15 @@ commands = [
     {
         "name": "list",
         "description": "View the server to-do list",
-        "type": 1
+        "type": 1,
+        "options": [
+            {
+                "name": "show_done",
+                "description": "(0) to display only ongoing / (1) to display only done / (2) to display both",
+                "type": 3,
+                "required": False
+            }
+        ]
     },
     {
         "name": "add",
