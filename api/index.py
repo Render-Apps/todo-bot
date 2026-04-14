@@ -69,7 +69,7 @@ def interactions():
                     "color": THEME_COLOR
                 }]
 
-            if done and (list_type == '0' or list_type == '2'):
+            if done and (list_type == '1' or list_type == '2'):
                 done_text = ""
                 for i, (task_id, task, _) in enumerate(done, 1):
                     done_text += f"~~**{i}.** (id: `{task_id}`) {task}~~\n"
