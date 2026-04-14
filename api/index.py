@@ -44,18 +44,20 @@ def interactions():
             # Empty Return
             if not tasks:
                 return jsonify({"type": 4, "data": {"embeds": [{"title": "📋 Server To-Do List", "description": "*The list is empty! Use `/add` or `/multi_add`.*", "color": THEME_COLOR}]}})
-            
-            # "Type" Checking
-            list_type = data['data']['options'][0]['value']
+        
+            # 'Safe' type checking
+            options = data['data'].get('options', [])
+            list_type = "0" # Default value
+            for opt in options:
+                if opt['name'] == 'show_done':
+                    list_type = str(opt['value'])
 
             # Get pending and done tasks
             pending = [t for t in tasks if not t[2]] # not done
             done = [t for t in tasks if t[2]] # done
 
-            if not list_type:
-                list_type = '0'
-
-            if list_type == '0' or list_type == '2':
+            embeds = []
+            if list_type == "0" or list_type == "2":
                 pending_text = ""
                 for i, (task_id, task, _) in enumerate(pending, 1):
                     pending_text += f"**{i}.** (id: `{task_id}`) {task}\n"
@@ -63,13 +65,13 @@ def interactions():
                 if not pending_text:
                     pending_text = "*All caught up!*"
 
-                embeds = [{
+                embeds.append({
                     "title": "📋 Server To-Do List",
                     "description": "**📝 Pending Tasks**\n" + pending_text,
                     "color": THEME_COLOR
-                }]
+                })
 
-            if done and (list_type == '1' or list_type == '2'):
+            if done and (list_type == "1" or list_type == "2"):
                 done_text = ""
                 for i, (task_id, task, _) in enumerate(done, 1):
                     done_text += f"~~**{i}.** (id: `{task_id}`) {task}~~\n"
