@@ -187,11 +187,23 @@ def interactions():
                     video_url = best_msg['embeds'][0]['url']
             
             if not video_url and best_msg.get('content'):
-                yt_pattern = r'(https?://(?:www\.)?(?:youtube\.com|youtu\.be)[^\s\)]+)'
-                match = re.search(yt_pattern, best_msg['content'])
+                text = best_msg['content']
                 
-                if match:
-                    video_url = match.group(1)
+                # Markdown Format
+                markdown_match = re.search(r'\[.*?\]\((.*?)\)', text)
+                if markdown_match:
+                    video_url = markdown_match.group(1)
+                else:
+                    # Anything with http(s):// in it
+                    http_match = re.search(r'(https?://[^\s\)]+)', text)
+                    if http_match:
+                        video_url = http_match.group(1)
+                
+                # Handle youtu.be links without http(s)://
+                if not video_url and 'youtu.be/' in text:
+                    raw_match = re.search(r'(youtu\.be/[^\s\)]+)', text)
+                    if raw_match:
+                        video_url = "https://" + raw_match.group(1)
 
             newsletter_embed = {
                 "title": "🌟 Weekly Top Creator Post",
@@ -202,7 +214,7 @@ def interactions():
             return jsonify({
                 "type": 4,
                 "data": {
-                    "content": video_url if video_url else "*(No video link found in the original message)*",
+                    "content": video_url if video_url else "*(No video link found)*",
                     "embeds": [newsletter_embed]
                 }
             })
