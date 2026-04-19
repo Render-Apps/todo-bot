@@ -28,7 +28,7 @@ def add_task(task):
     c.close()
     conn.close()
 
-def add_multiple_tasks(task_list):
+def add_multi(task_list):
     conn = get_connection()
     c = conn.cursor()
     # Prepare list of tuples for executemany
@@ -56,3 +56,13 @@ def mark_task_done(task_id):
     c.close()
     conn.close()
     return rows_updated > 0
+
+def mark_multi_done(task_list):
+    conn = get_connection()
+    c = conn.cursor()
+    # Prepare list of tuples for executemany
+    args = [(t,) for t in task_list]
+    c.executemany('UPDATE server_todos SET is_done = TRUE WHERE id = %s', args)
+    conn.commit()
+    c.close()
+    conn.close()

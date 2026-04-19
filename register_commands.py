@@ -66,6 +66,24 @@ commands = [
                 "required": True
             }
         ]
+    },
+    {
+        "name": "multi_done",
+        "description": "Mark multiple tasks seperated by commas",
+        "type": 1,
+        "options": [
+            {
+                "name": "task_id(s)",
+                "description": "12, 4, 6, 10",
+                "type": 3, 
+                "required": True
+            }
+        ]
+    },
+    {
+        "name": "newsletter",
+        "description": "Find the most starred YT notifications from the past week",
+        "type": 1
     }
 ]
 
