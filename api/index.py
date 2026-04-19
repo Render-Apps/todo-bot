@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, request, jsonify
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
@@ -186,16 +187,11 @@ def interactions():
                     video_url = best_msg['embeds'][0]['url']
             
             if not video_url and best_msg.get('content'):
-                words = best_msg['content'].split()
+                yt_pattern = r'(https?://(?:www\.)?(?:youtube\.com|youtu\.be)[^\s\)]+)'
+                match = re.search(yt_pattern, best_msg['content'])
                 
-                for word in words:
-                    if 'youtu.be' in word or 'youtube.com' in word or word.startswith('http'):
-                        video_url = word
-                        
-                        if not video_url.startswith('http'):
-                            video_url = f"https://{video_url}"
-                            
-                        break
+                if match:
+                    video_url = match.group(1)
 
             newsletter_embed = {
                 "title": "🌟 Weekly Top Creator Post",
