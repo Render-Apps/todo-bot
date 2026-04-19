@@ -73,7 +73,7 @@ commands = [
         "type": 1,
         "options": [
             {
-                "name": "task_id(s)",
+                "name": "task_ids",
                 "description": "12, 4, 6, 10",
                 "type": 3, 
                 "required": True

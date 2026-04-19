@@ -3,10 +3,52 @@ from flask import Flask, request, jsonify
 from nacl.signing import VerifyKey
 from nacl.exceptions import BadSignatureError
 import database
+import requests
 
 app = Flask(__name__)
 
 PUBLIC_KEY = os.environ.get('DISCORD_PUBLIC_KEY', '').strip()
+BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
+
+def get_top_starred(channel_ids):
+    headers = {"Authorization": f"Bot {BOT_TOKEN}"}
+    top_message = None
+    max_stars = 0
+
+    for channel_id in channel_ids:
+        # Fetch the last 50 messages from the channel
+        url = f"https://discord.com/api/v10/channels/{channel_id}/messages?limit=50"
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            messages = response.json()
+            for msg in messages:
+                # Look for the star (⭐) reaction
+                star_count = 0
+                if 'reactions' in msg:
+                    for emoji in msg['reactions']:
+                        if emoji['emoji']['name'] == '⭐':
+                            star_count = emoji['count']
+                
+                if star_count > max_stars:
+                    max_stars = star_count
+                    top_message = msg
+                    
+    return top_message, max_stars
+
+def get_channels_in_category(guild_id, category_id):
+    headers = {"Authorization": f"Bot {os.environ.get('DISCORD_BOT_TOKEN')}"}
+    url = f"https://discord.com/api/v10/guilds/{guild_id}/channels"
+    
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        all_channels = response.json()
+        # Filter for text channels (type 0) that are children of the category_id
+        return [
+            channel['id'] for channel in all_channels 
+            if str(channel.get('parent_id')) == str(category_id) and channel['type'] == 0
+        ]
+    return []
 
 @app.route('/api/interactions', methods=['POST'])
 def interactions():
@@ -92,16 +134,16 @@ def interactions():
             return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Added:** {task_content}", "color": 5763719}]}})
 
         # === MULTI_ADD === 
-        elif command_name == 'multi_add':
-            csv_content = data['data']['options'][0]['value']
-            tasks_to_insert = [t.strip() for t in csv_content.split(',') if t.strip()]
-            
-            if tasks_to_insert:
-                database.add_multi(tasks_to_insert)
-                list_str = "\n".join([f"• {t}" for t in tasks_to_insert])
-                return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Added {len(tasks_to_insert)} tasks:**\n{list_str}", "color": 5763719}]}})
-            else:
-                return jsonify({"type": 4, "data": {"embeds": [{"description": "⚠️ No valid tasks found. Format: `Task 1, Task 2`", "color": 16776960}]}})
+        elif command_name == 'multi_done':
+            ids_str = data['data']['options'][0]['value']
+            try:
+                id_list = [int(i.strip()) for i in ids_str.split(',') if i.strip()]
+                
+                database.mark_multi_done(id_list)
+                
+                return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Marked {len(id_list)} tasks as done!**", "color": 5763719}]}})
+            except ValueError:
+                return jsonify({"type": 4, "data": {"embeds": [{"description": "⚠️ Invalid format. Use IDs separated by commas (e.g., `1, 2, 3`)", "color": 16776960}]}})
 
         # === DONE ===
         elif command_name == 'done':
@@ -124,5 +166,34 @@ def interactions():
                 return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Marked {len(tasks_to_insert)} tasks as done!", "color": 5763719}]}})
             else:
                 return jsonify({"type": 4, "data": {"embeds": [{"description": "⚠️ No valid tasks found. Format: `Task 1, Task 2`", "color": 16776960}]}})
+            
+        elif command_name == 'newsletter':
+            guild_id = data.get('guild_id')
+
+            category_id = "1492953536110137577" # Creator Notifications Category ID 
+            
+            yt_channels = get_channels_in_category(guild_id, category_id)
+            
+            if not yt_channels:
+                return jsonify({"type": 4, "data": {"content": "No channels found in that category!"}})
+
+            best_msg, star_count = get_top_starred(yt_channels)
+            
+            if not best_msg or star_count == 0:
+                return jsonify({"type": 4, "data": {"content": "No starred messages found in this category this week!"}})
+
+            return jsonify({
+                "type": 4,
+                "data": {
+                    "embeds": [{
+                        "title": "🌟 Weekly Top Creator Post",
+                        "description": f"Most starred post in the folder: **{star_count}** ⭐\n\n[Jump to Message](https://discord.com/channels/{guild_id}/{best_msg['channel_id']}/{best_msg['id']})",
+                        "color": 16766720,
+                        "fields": [
+                            {"name": "Content", "value": best_msg.get('content') or "Embedded Content (Video)"}
+                        ]
+                    }]
+                }
+            })
 
     return jsonify({"error": "Unknown command"}), 400
