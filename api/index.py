@@ -170,7 +170,7 @@ def interactions():
         elif command_name == 'newsletter':
             guild_id = data.get('guild_id')
 
-            category_id = "1492953536110137577" # Creator Notifications Category ID 
+            category_id = "1492956125413380166" # Creator Notifications Category ID 
             
             yt_channels = get_channels_in_category(guild_id, category_id)
             
