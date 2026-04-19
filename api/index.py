@@ -179,36 +179,29 @@ def interactions():
             if not best_msg or star_count == 0:
                 return jsonify({"type": 4, "data": {"content": "No starred messages found in this category this week!"}})
 
-            # --- NEW: Extract the Thumbnail URL ---
-            thumbnail_url = None
+            video_url = None
             
-            # 1. Check if Discord auto-generated an embed for a YouTube link
             if best_msg.get('embeds') and len(best_msg['embeds']) > 0:
-                original_embed = best_msg['embeds'][0]
-                if 'thumbnail' in original_embed and 'url' in original_embed['thumbnail']:
-                    thumbnail_url = original_embed['thumbnail']['url']
+                if 'url' in best_msg['embeds'][0]:
+                    video_url = best_msg['embeds'][0]['url']
             
-            # 2. Fallback: Check if the creator directly uploaded an image attachment instead
-            if not thumbnail_url and best_msg.get('attachments') and len(best_msg['attachments']) > 0:
-                thumbnail_url = best_msg['attachments'][0].get('url')
+            if not video_url and best_msg.get('content'):
+                words = best_msg['content'].split()
+                for word in words:
+                    if word.startswith('http'):
+                        video_url = word
+                        break
 
-            # --- Build the Embed ---
             newsletter_embed = {
                 "title": "🌟 Weekly Top Creator Post",
-                "description": f"Most starred post in the folder: with **{star_count}** ⭐'s\n\n[Jump to Message](https://discord.com/channels/{guild_id}/{best_msg['channel_id']}/{best_msg['id']})",
-                "color": 16766720,
-                "fields": [
-                    {"name": "Content", "value": best_msg.get('content') or "Embedded Content"}
-                ]
+                "description": f"Most starred post in the folder: **{star_count}** ⭐\n\n[Jump to Message](https://discord.com/channels/{guild_id}/{best_msg['channel_id']}/{best_msg['id']})",
+                "color": 16766720
             }
-
-            # check for a thumbnail
-            if thumbnail_url:
-                newsletter_embed["image"] = {"url": thumbnail_url} 
 
             return jsonify({
                 "type": 4,
                 "data": {
+                    "content": video_url if video_url else "*(No video link found in the original message)*",
                     "embeds": [newsletter_embed]
                 }
             })
