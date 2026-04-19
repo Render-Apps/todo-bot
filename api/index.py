@@ -182,9 +182,6 @@ def interactions():
             # --- NUCLEAR OPTION: Just grab the raw message text ---
             raw_content = best_msg.get('content')
             
-<<<<<<< HEAD
-            # --- Build the Payload ---
-=======
             if best_msg.get('embeds') and len(best_msg['embeds']) > 0:
                 if 'url' in best_msg['embeds'][0]:
                     video_url = best_msg['embeds'][0]['url']
@@ -201,7 +198,6 @@ def interactions():
                             
                         break
 
->>>>>>> parent of 6b59932 ([fix] md link regex)
             newsletter_embed = {
                 "title": "🌟 Weekly Top Creator Post",
                 "description": f"Most starred post in the folder: **{star_count}** ⭐\n\n[Jump to Message](https://discord.com/channels/{guild_id}/{best_msg['channel_id']}/{best_msg['id']})",
