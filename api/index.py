@@ -180,31 +180,10 @@ def interactions():
             if not best_msg or star_count == 0:
                 return jsonify({"type": 4, "data": {"content": "No starred messages found in this category this week!"}})
 
-            video_url = None
+            # --- NUCLEAR OPTION: Just grab the raw message text ---
+            raw_content = best_msg.get('content')
             
-            if best_msg.get('embeds') and len(best_msg['embeds']) > 0:
-                if 'url' in best_msg['embeds'][0]:
-                    video_url = best_msg['embeds'][0]['url']
-            
-            if not video_url and best_msg.get('content'):
-                text = best_msg['content']
-                
-                # Markdown Format
-                markdown_match = re.search(r'\[.*?\]\((.*?)\)', text)
-                if markdown_match:
-                    video_url = markdown_match.group(1)
-                else:
-                    # Anything with http(s):// in it
-                    http_match = re.search(r'(https?://[^\s\)]+)', text)
-                    if http_match:
-                        video_url = http_match.group(1)
-                
-                # Handle youtu.be links without http(s)://
-                if not video_url and 'youtu.be/' in text:
-                    raw_match = re.search(r'(youtu\.be/[^\s\)]+)', text)
-                    if raw_match:
-                        video_url = "https://" + raw_match.group(1)
-
+            # --- Build the Payload ---
             newsletter_embed = {
                 "title": "🌟 Weekly Top Creator Post",
                 "description": f"Most starred post in the folder: **{star_count}** ⭐\n\n[Jump to Message](https://discord.com/channels/{guild_id}/{best_msg['channel_id']}/{best_msg['id']})",
@@ -214,7 +193,8 @@ def interactions():
             return jsonify({
                 "type": 4,
                 "data": {
-                    "content": video_url if video_url else "*(No video link found)*",
+                    # Literally just print the entire original message text above the embed
+                    "content": raw_content if raw_content else "*(Message had no text)*",
                     "embeds": [newsletter_embed]
                 }
             })
