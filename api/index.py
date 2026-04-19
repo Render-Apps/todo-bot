@@ -134,16 +134,16 @@ def interactions():
             return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Added:** {task_content}", "color": 5763719}]}})
 
         # === MULTI_ADD === 
-        elif command_name == 'multi_done':
-            ids_str = data['data']['options'][0]['value']
-            try:
-                id_list = [int(i.strip()) for i in ids_str.split(',') if i.strip()]
-                
-                database.mark_multi_done(id_list)
-                
-                return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Marked {len(id_list)} tasks as done!**", "color": 5763719}]}})
-            except ValueError:
-                return jsonify({"type": 4, "data": {"embeds": [{"description": "⚠️ Invalid format. Use IDs separated by commas (e.g., `1, 2, 3`)", "color": 16776960}]}})
+        elif command_name == 'multi_add':
+            csv_content = data['data']['options'][0]['value']
+            tasks_to_insert = [t.strip() for t in csv_content.split(',') if t.strip()]
+            
+            if tasks_to_insert:
+                database.add_multi(tasks_to_insert)
+                list_str = "\n".join([f"• {t}" for t in tasks_to_insert])
+                return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Added {len(tasks_to_insert)} tasks:**\n{list_str}", "color": 5763719}]}})
+            else:
+                return jsonify({"type": 4, "data": {"embeds": [{"description": "⚠️ No valid tasks found. Format: `Task 1, Task 2`", "color": 16776960}]}})
 
         # === DONE ===
         elif command_name == 'done':
@@ -154,18 +154,15 @@ def interactions():
             else:
                 return jsonify({"type": 4, "data": {"embeds": [{"title": "⚠️ Error", "description": f"Task `{task_id}` not found.", "color": 16776960}]}})
 
-
-        # === DONE ===
+        # === MULTI_DONE ===
         elif command_name == 'multi_done':
-            csv_content = data['data']['options'][0]['value']
-            tasks_to_insert = [t.strip() for t in csv_content.split(',') if t.strip()]
-            
-            if tasks_to_insert:
-                database.mark_multi_done(tasks_to_insert)
-                list_str = "\n".join([f"• {t}" for t in tasks_to_insert])
-                return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Marked {len(tasks_to_insert)} tasks as done!", "color": 5763719}]}})
-            else:
-                return jsonify({"type": 4, "data": {"embeds": [{"description": "⚠️ No valid tasks found. Format: `Task 1, Task 2`", "color": 16776960}]}})
+            ids_str = data['data']['options'][0]['value']
+            try:
+                id_list = [int(i.strip()) for i in ids_str.split(',') if i.strip()]
+                database.mark_multi_done(id_list)
+                return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Marked {len(id_list)} tasks as done!**", "color": 5763719}]}})
+            except ValueError:
+                return jsonify({"type": 4, "data": {"embeds": [{"description": "⚠️ Invalid format. Use IDs separated by commas (e.g., `1, 2, 3`)", "color": 16776960}]}})
             
         elif command_name == 'newsletter':
             guild_id = data.get('guild_id')
