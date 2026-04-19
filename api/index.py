@@ -187,9 +187,14 @@ def interactions():
             
             if not video_url and best_msg.get('content'):
                 words = best_msg['content'].split()
+                
                 for word in words:
-                    if word.startswith('http'):
+                    if 'youtu.be' in word or 'youtube.com' in word or word.startswith('http'):
                         video_url = word
+                        
+                        if not video_url.startswith('http'):
+                            video_url = f"https://{video_url}"
+                            
                         break
 
             newsletter_embed = {
