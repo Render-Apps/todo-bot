@@ -80,10 +80,14 @@ def interactions():
         command_name = data['data']['name']
         THEME_COLOR = 16678937 
 
+        guild_id = data.get('guild_id')
+        if not guild_id:
+            return jsonify({"type": 4, "data": {"content": "❌ This command can only be used inside a server."}})
+
         # Commands
         ## === LIST ===
         if command_name == 'list':
-            tasks = database.get_tasks()
+            tasks = database.get_tasks(guild_id)
             
             # Empty Return
             if not tasks:
@@ -131,7 +135,7 @@ def interactions():
         # === ADD ===
         elif command_name == 'add':
             task_content = data['data']['options'][0]['value']
-            database.add_task(task_content)
+            database.add_task(task_content, guild_id)
             return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Added:** {task_content}", "color": 5763719}]}})
 
         # === MULTI_ADD === 
@@ -140,7 +144,7 @@ def interactions():
             tasks_to_insert = [t.strip() for t in csv_content.split(',') if t.strip()]
             
             if tasks_to_insert:
-                database.add_multi(tasks_to_insert)
+                database.add_multi(tasks_to_insert, guild_id)
                 list_str = "\n".join([f"• {t}" for t in tasks_to_insert])
                 return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Added {len(tasks_to_insert)} tasks:**\n{list_str}", "color": 5763719}]}})
             else:
@@ -149,7 +153,7 @@ def interactions():
         # === DONE ===
         elif command_name == 'done':
             task_id = data['data']['options'][0]['value']
-            success = database.mark_task_done(task_id)
+            success = database.mark_task_done(task_id, guild_id)
             if success:
                 return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Marked task as done:** `{task_id}`", "color": 5763719}]}})
             else:
@@ -160,14 +164,12 @@ def interactions():
             ids_str = data['data']['options'][0]['value']
             try:
                 id_list = [int(i.strip()) for i in ids_str.split(',') if i.strip()]
-                database.mark_multi_done(id_list)
+                database.mark_multi_done(id_list, guild_id)
                 return jsonify({"type": 4, "data": {"embeds": [{"description": f"✅ **Marked {len(id_list)} tasks as done!**", "color": 5763719}]}})
             except ValueError:
                 return jsonify({"type": 4, "data": {"embeds": [{"description": "⚠️ Invalid format. Use IDs separated by commas (e.g., `1, 2, 3`)", "color": 16776960}]}})
             
         elif command_name == 'newsletter':
-            guild_id = data.get('guild_id')
-
             category_id = "1492956125413380166" # Creator Notifications Category ID 
             
             yt_channels = get_channels_in_category(guild_id, category_id)
